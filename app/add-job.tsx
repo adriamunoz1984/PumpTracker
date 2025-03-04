@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function AddJobScreen() {
     const router = useRouter();
@@ -19,15 +21,28 @@ export default function AddJobScreen() {
         setJob({ ...job, [field]: value });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!job.companyName || !job.yards || !job.total) {
             Alert.alert('Error', 'Please fill in required fields.');
             return;
         }
-        // TODO: Save job data (using AsyncStorage or a database)
-        Alert.alert('Success', 'Job added successfully!');
-        router.push('/jobs'); // Navigate back to the job list
+    
+        try {
+            const existingJobs = await AsyncStorage.getItem('jobs');
+            const jobsArray = existingJobs ? JSON.parse(existingJobs) : [];
+    
+            // Add new job
+            const newJob = { id: Date.now().toString(), ...job };
+            const updatedJobs = [...jobsArray, newJob];
+    
+            await AsyncStorage.setItem('jobs', JSON.stringify(updatedJobs));
+            Alert.alert('Success', 'Job added successfully!');
+            router.push('/jobs'); // Navigate back
+        } catch (error) {
+            console.error('Error saving job:', error);
+        }
     };
+    
 
     return (
         <View style={styles.container}>
