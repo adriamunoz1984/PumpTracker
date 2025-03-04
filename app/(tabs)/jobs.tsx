@@ -1,46 +1,19 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
-type Job = {
-    id: string;
-    date: string;
-    companyName: string;
-    address: string;
-    city: string;
-    yards: number;
-    total: number;
-    paymentMethod: string;
-    paymentStatus: string;
-};
-
-const dummyJobs: Job[] = [
-    {
-        id: '1',
-        date: '2025-03-03',
-        companyName: 'ABC Concrete',
-        address: '123 Main St',
-        city: 'Los Angeles',
-        yards: 10,
-        total: 1200,
-        paymentMethod: 'Cash',
-        paymentStatus: 'Paid'
-    },
-    {
-        id: '2',
-        date: '2025-03-02',
-        companyName: 'XYZ Builders',
-        address: '456 Elm St',
-        city: 'San Diego',
-        yards: 8,
-        total: 950,
-        paymentMethod: 'Check',
-        paymentStatus: 'Unpaid'
-    }
+const dummyJobs = [
+    { id: '1', companyName: 'ABC Concrete', date: '2025-03-03', total: 1200 },
+    { id: '2', companyName: 'XYZ Builders', date: '2025-03-02', total: 950 },
 ];
 
 export default function JobListScreen() {
+    const router = useRouter();
+
     return (
         <View style={styles.container}>
+            <Button title="Add Job" onPress={() => router.push('/add-job')} />
+
             <Text style={styles.title}>Job List</Text>
             <FlatList
                 data={dummyJobs}
@@ -48,9 +21,7 @@ export default function JobListScreen() {
                 renderItem={({ item }) => (
                     <View style={styles.jobCard}>
                         <Text style={styles.company}>{item.companyName}</Text>
-                        <Text>{item.date} - {item.city}</Text>
-                        <Text>Yards: {item.yards} | Total: ${item.total}</Text>
-                        <Text>Payment: {item.paymentMethod} - {item.paymentStatus}</Text>
+                        <Text>{item.date} - ${item.total}</Text>
                     </View>
                 )}
             />
@@ -66,10 +37,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         backgroundColor: '#f9f9f9',
         borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
         elevation: 3
     },
     company: { fontSize: 18, fontWeight: 'bold' }
