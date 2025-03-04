@@ -57,6 +57,22 @@ export default function JobListScreen() {
         }
     };
 
+    //Delete Function
+    const deleteJob = async (jobId: string) => {
+        try {
+            const storedJobs = await AsyncStorage.getItem('jobs');
+            if (!storedJobs) return;
+    
+            const jobsArray = JSON.parse(storedJobs);
+            const updatedJobs = jobsArray.filter((job: any) => job.id !== jobId);
+    
+            await AsyncStorage.setItem('jobs', JSON.stringify(updatedJobs));
+            setJobs(updatedJobs);
+        } catch (error) {
+            console.error('Error deleting job:', error);
+        }
+    };
+    
     useEffect(() => {
         generateDummyJobs(); // Auto-fill data
         loadJobs();          // Load jobs from AsyncStorage
@@ -78,6 +94,8 @@ export default function JobListScreen() {
                         <View style={styles.jobCard}>
                             <Text style={styles.company}>{item.companyName}</Text>
                             <Text>{item.date} - ${item.total}</Text>
+                            <Button title="Delete" color="red" onPress={() => deleteJob(item.id)} />
+                            <Button title="Edit" onPress={() => router.push(`/add-job?id=${item.id}`)} />
                         </View>
                     )}
                 />

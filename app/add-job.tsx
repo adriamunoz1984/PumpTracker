@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function AddJobScreen() {
     const router = useRouter();
+    const { id } = useLocalSearchParams(); // Get job ID if editing
 
     const [job, setJob] = useState({
         companyName: '',
@@ -17,6 +17,21 @@ export default function AddJobScreen() {
         paymentStatus: '',
     });
 
+    // Load job data if editing
+    useEffect(() => {
+        const loadJob = async () => {
+            if (!id) return;
+            const storedJobs = await AsyncStorage.getItem('jobs');
+            if (!storedJobs) return;
+
+            const jobsArray = JSON.parse(storedJobs);
+            const foundJob = jobsArray.find((j: any) => j.id === id);
+            if (foundJob) setJob(foundJob);
+        };
+
+        loadJob();
+    }, [id]);
+
     const handleInputChange = (field: string, value: string) => {
         setJob({ ...job, [field]: value });
     };
@@ -26,27 +41,30 @@ export default function AddJobScreen() {
             Alert.alert('Error', 'Please fill in required fields.');
             return;
         }
-    
+
         try {
-            const existingJobs = await AsyncStorage.getItem('jobs');
-            const jobsArray = existingJobs ? JSON.parse(existingJobs) : [];
-    
-            // Add new job
-            const newJob = { id: Date.now().toString(), ...job };
-            const updatedJobs = [...jobsArray, newJob];
-    
+            const storedJobs = await AsyncStorage.getItem('jobs');
+            const jobsArray = storedJobs ? JSON.parse(storedJobs) : [];
+
+            let updatedJobs;
+            if (id) {
+                updatedJobs = jobsArray.map((j: any) => (j.id === id ? job : j));
+            } else {
+                const newJob = { id: Date.now().toString(), ...job };
+                updatedJobs = [...jobsArray, newJob];
+            }
+
             await AsyncStorage.setItem('jobs', JSON.stringify(updatedJobs));
-            Alert.alert('Success', 'Job added successfully!');
-            router.push('/jobs'); // Navigate back
+            Alert.alert('Success', id ? 'Job updated!' : 'Job added!');
+            router.push('/jobs'); // Go back to job list
         } catch (error) {
             console.error('Error saving job:', error);
         }
     };
-    
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Add New Job</Text>
+            <Text style={styles.title}>{id ? 'Edit Job' : 'Add New Job'}</Text>
 
             <TextInput 
                 style={styles.input} 
@@ -99,7 +117,7 @@ export default function AddJobScreen() {
                 onChangeText={(text) => handleInputChange('paymentStatus', text)}
             />
 
-            <Button title="Save Job" onPress={handleSave} />
+            <Button title={id ? "Update Job" : "Save Job"} onPress={handleSave} />
         </View>
     );
 }
